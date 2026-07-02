@@ -4,6 +4,7 @@
     background-position: center;
     min-height: 100vh;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     margin: 0;
@@ -34,7 +35,8 @@
     height: 350px;
 }
 
-#pacman-btn {
+#pacman-btn,
+#back-btn {
     background-color: #528336;
     color: #d6eed5;
     width: 250px;
@@ -47,6 +49,31 @@
     box-shadow: 5px 5px 4px rgba(0, 0, 0, 0.2);
 }
 
-#pacman-btn:hover {
+#pacman-btn:hover,
+#back-btn:hover {
     transform: scale(1.05);
 }
+
+#pacman-btn:active,
+#back-btn:active {
+    transform: scale(0.95);
+
+}
+
+#gameCanvas {
+    background-color: black;
+    width: 960px;
+    height: 720px;
+    display: block;
+    margin: 0 auto;
+}
+
+
+#pacman-title {
+    width: 300px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    padding-bottom: 8px;
+}
+
