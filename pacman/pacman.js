@@ -33,32 +33,25 @@ const offsetX = (canvas.width - mapWidth) / 2; // X offset to center the map
 const offsetY = (canvas.height - mapHeight) / 2; // Y offset to center the map
 
 
-function desenharJogo() {
-  // 1. Pinta a tela inteira de preto
+function gameStart() {
+    // TODO -> Deixar uns comentários explicando essa função melhor
   ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // 2. Percorre o nosso mapa (A lógica da sua primeira imagem!)
   for (let i = 0; i < linhas; i++) {
     for (let j = 0; j < colunas; j++) {
       
       if (wallMap[i][j] === 1) {
-        // Se for 1, é parede. Preparamos a tinta azul clássica!
         ctx.fillStyle = '#2121DE';
         
-        // Calcula a posição exata somando as margens (offset)
-        // j é o eixo X (colunas) e i é o eixo Y (linhas)
-        const posX = offsetX + (j * tamanhoBloco);
-        const posY = offsetY + (i * tamanhoBloco);
+        const posX = offsetX + (j * blockWidth);
+        const posY = offsetY + (i * blockHeight);
         
-        // Desenha o quadrado da parede
-        ctx.fillRect(posX, posY, tamanhoBloco, tamanhoBloco);
+        ctx.fillRect(posX, posY, blockWidth, blockHeight);
       }
       
-      // Obs: Se for 0, não fazemos nada, deixando o fundo preto aparecer!
     }
   }
 }
 
-// Roda a função pela primeira vez
-desenharJogo();
+gameStart();
