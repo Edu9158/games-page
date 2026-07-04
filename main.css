@@ -42,7 +42,7 @@
     width: 250px;
     height: 50px;
     border: solid 2px black;
-    margin-top: 15px;
+    margin-top: 10px;
     font-size: 30px;
     cursor: pointer;
     border-radius: 5px;
@@ -70,10 +70,10 @@
 
 
 #pacman-title {
-    width: 300px;
+    width: 400px;
     height: auto;
     display: block;
     margin: 0 auto;
-    padding-bottom: 8px;
+    padding-bottom: 4px;
 }
 
