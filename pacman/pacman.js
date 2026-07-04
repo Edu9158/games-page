@@ -1,5 +1,5 @@
 // Back button logic
-document.getElementById("back-btn").addEventListener("click", function(){
+document.getElementById("home-page-btn").addEventListener("click", function(){
   window.location.href = "../index.html"; // Redirect to index.html
 });
 
