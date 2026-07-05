@@ -6,8 +6,11 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
     margin: 0;
+}
+
+#index-body {
+    align-items: center;
 }
 
 .card {
@@ -60,20 +63,49 @@
 
 }
 
+.pacman-page {
+    overflow: hidden;
+    min-height: 85vh;
+    padding: 0;
+}
+
+.pacman-page .wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    margin: 0;
+    padding: 0 1rem 0 0;
+}
+
+.pacman-page .col-6 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 #gameCanvas {
-    background-color: black;
-    width: 960px;
-    height: 720px;
+    height: 100%;
+    max-height: 100vh;
+    width: 100%;
+    max-width: 100%;
+    image-rendering: pixelated;
     display: block;
     margin: 0 auto;
+    object-fit: contain;
 }
 
 
 #pacman-title {
-    width: 400px;
+    width: 320px;
+    max-width: 100%;
     height: auto;
     display: block;
-    margin: 0 auto;
+    margin: 0 0 1rem 0;
     padding-bottom: 4px;
+}
+
+.pacman-page #home-page-btn {
+    margin: 0;
 }
 
