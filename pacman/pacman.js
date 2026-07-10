@@ -7,47 +7,64 @@ document.getElementById("home-page-btn").addEventListener("click", function(){
 // PACMAN GAME LOGIC
 // -----------------------------------------------------------
 
-const atlas = {
-  1: {x:0, y:0},
-  2: {x:8, y:0},
-  3: {x:16, y:0},
-  4: {x:24, y:0},
-  5: {x:32, y:0},
-  6: {x:40, y:0},
-  7: {x:0, y:8},
-  8: {x:8, y:8},
-  9: {x:16, y:8},
-  10: {x:24, y:8},
-  11: {x:32, y:8},
-  12: {x:40, y:8},
-  13: {x:0, y:16},
-  14: {x:8, y:16},
-  15: {x:16, y:16},
-  16: {x:24, y:16},
-  17: {x:32, y:16},
-  18: {x:40, y:16},
-  19: {x:0, y:24},
-  20: {x:8, y:24},
-  21: {x:16, y:24},
-  22: {x:24, y:24},
-  23: {x:32, y:24},
-  24: {x:40, y:24},
-  25: {x:0, y:32},
-  26: {x:8, y:32},
-  27: {x:16, y:32},
-  28: {x:24, y:32},
-  29: {x:32, y:32},
-  30: {x:40, y:32},
-  31: {x:0, y:40},
-  32: {x:8, y:40},
-  33: {x:16, y:40},
-  34: {x:24, y:40},
-  35: {x:32, y:40},
-  36: {x:40, y:40},
-  37: {x:0, y:48},
-  38: {x:8, y:48},
-  39: {x:16, y:48},
-  40: {x:24, y:48}
+const mapSprite = new Image();
+mapSprite.src = "../src/pacman/map-frames.png";
+
+const pointsSprite = new Image();
+pointsSprite.src = "../src/pacman/points/points.png"
+
+const pacmanSprite = new Image();
+pacmanSprite.src = "../src/pacman/pacman/pacman.png"
+
+const deadPacmanSprite = new Image();
+deadPacmanSprite.src = "../src/pacman/pacman-death.png"
+
+const atlasMap = {
+  // Walls
+   1: {img: mapSprite, x: 0, y: 0},
+   2: {img: mapSprite, x: 8, y: 0},
+   3: {img: mapSprite, x:16, y: 0},
+   4: {img: mapSprite, x:24, y: 0},
+   5: {img: mapSprite, x:32, y: 0},
+   6: {img: mapSprite, x:40, y: 0},
+   7: {img: mapSprite, x: 0, y: 8},
+   8: {img: mapSprite, x: 8, y: 8},
+   9: {img: mapSprite, x:16, y: 8},
+  10: {img: mapSprite, x:24, y: 8},
+  11: {img: mapSprite, x:32, y: 8},
+  12: {img: mapSprite, x:40, y: 8},
+  13: {img: mapSprite, x: 0, y:16},
+  14: {img: mapSprite, x: 8, y:16},
+  15: {img: mapSprite, x:16, y:16},
+  16: {img: mapSprite, x:24, y:16},
+  17: {img: mapSprite, x:32, y:16},
+  18: {img: mapSprite, x:40, y:16},
+  19: {img: mapSprite, x: 0, y:24},
+  20: {img: mapSprite, x: 8, y:24},
+  21: {img: mapSprite, x:16, y:24},
+  22: {img: mapSprite, x:24, y:24},
+  23: {img: mapSprite, x:32, y:24},
+  24: {img: mapSprite, x:40, y:24},
+  25: {img: mapSprite, x: 0, y:32},
+  26: {img: mapSprite, x: 8, y:32},
+  27: {img: mapSprite, x:16, y:32},
+  28: {img: mapSprite, x:24, y:32},
+  29: {img: mapSprite, x:32, y:32},
+  30: {img: mapSprite, x:40, y:32},
+  31: {img: mapSprite, x: 0, y:40},
+  32: {img: mapSprite, x: 8, y:40},
+  33: {img: mapSprite, x:16, y:40},
+  34: {img: mapSprite, x:24, y:40},
+  35: {img: mapSprite, x:32, y:40},
+  36: {img: mapSprite, x:40, y:40},
+  37: {img: mapSprite, x: 0, y:48},
+  38: {img: mapSprite, x: 8, y:48},
+  39: {img: mapSprite, x:16, y:48},
+  40: {img: mapSprite, x:24, y:48},
+
+  // Points
+  42: {img: pointsSprite, x: 0, y: 0},
+  43: {img: pointsSprite, x: 0, y: 8}
 }
 
 // Important variables [Add more if needed]
@@ -60,11 +77,8 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
 canvas.width = 960;
-canvas.height = 992;
+canvas.height = 1120;
 ctx.imageSmoothingEnabled = false;
-
-const spriteSheet = new Image();
-spriteSheet.src = "../src/pacman/map-frames.png";
 
 // Define the wall map
 // 41 - Empty Space 
@@ -119,6 +133,21 @@ const mapHeight = lines * blockSize; // Total height of the map
 const offsetX = (canvas.width - mapWidth) / 2; // X offset to center the map
 const offsetY = (canvas.height - mapHeight) / 2; // Y offset to center the map
 
+const pacman = {
+  x: 13.1,
+  y: 22.6,
+  speed: 0.1, 
+  dirX: 0,
+  dirY: 0,
+  frame: 0
+}
+
+const pacmanAnim = [
+  { x: 0, y: 0 },   
+  { x: 16, y: 0 },  
+  { x: 0, y: 16 }   
+];
+
 let gameState = "menu"; // Possible states: "menu", "playing", "paused", "gameover", "win"
 
 function drawGame() {
@@ -128,15 +157,17 @@ function drawGame() {
   for (let i=0; i < lines; i++) {
     for (let j = 0; j < columns; j++) {
       const idBlock = wallMap[i][j];
-      if (atlas[idBlock] !== undefined) {
-        const snippetX = atlas[idBlock].x;
-        const snippetY = atlas[idBlock].y;
+      if (atlasMap[idBlock] !== undefined) {
+        const mapImage = atlasMap[idBlock].img;  
+        
+        const snippetX = atlasMap[idBlock].x;
+        const snippetY = atlasMap[idBlock].y;
 
         const posX = offsetX + (j * blockSize);
         const posY = offsetY + (i * blockSize);
 
         ctx.drawImage(
-          spriteSheet,
+          mapImage,
           snippetX, snippetY,
           8, 8,
           posX, posY,
@@ -145,6 +176,8 @@ function drawGame() {
       }
     }
   }
+
+  drawPacman()
 }
 
 function drawMenu() {
@@ -172,6 +205,21 @@ function drawPauseMenu() {
   ctx.fillText('Press Esc to quit', canvas.width / 2, canvas.height / 2 + 50);
 }
 
+function drawPacman() {
+  const posX = offsetX + (pacman.x * blockSize);
+  const posY = offsetY + (pacman.y * blockSize);
+
+  const snippetX = pacmanAnim[pacman.frame].x;
+  const snippetY = pacmanAnim[pacman.frame].y;
+
+  ctx.drawImage(
+    pacmanSprite,
+    snippetX, snippetY,
+    16, 16,             
+    posX, posY,
+    blockSize * 2, blockSize * 2
+  );
+}
 // Start the game by drawing the menu first
 // Wait for the font to load before drawing the menu
 document.fonts.ready.then(function() {
