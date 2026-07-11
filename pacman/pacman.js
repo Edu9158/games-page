@@ -134,21 +134,136 @@ const offsetX = (canvas.width - mapWidth) / 2; // X offset to center the map
 const offsetY = (canvas.height - mapHeight) / 2; // Y offset to center the map
 
 const pacman = {
-  x: 13.1,
-  y: 22.6,
-  speed: 0.1, 
+  x: 13.5,
+  y: 23.5,
+  speed: 0.15, 
   dirX: 0,
   dirY: 0,
-  frame: 0
+  nextDirX: 0,
+  nextDirY: 0,
+  frame: 0,
+  animDelay: 0,
+  angle: 0
 }
 
 const pacmanAnim = [
-  { x: 0, y: 0 },   
-  { x: 16, y: 0 },  
-  { x: 0, y: 16 }   
+  {img: pacmanSprite, x: 0, y: 0 },   
+  {img: pacmanSprite, x: 16, y: 0 },  
+  {img: pacmanSprite, x: 0, y: 16 }   
 ];
 
 let gameState = "menu"; // Possible states: "menu", "playing", "paused", "gameover", "win"
+
+function canWalk(nextX, nextY) {
+  const r = 0.41; 
+
+  // Get the grid coordinates for pacman's four corners
+  const left = Math.floor(nextX - r);
+  const right = Math.floor(nextX + r);
+  const top = Math.floor(nextY - r);
+  const bottom = Math.floor(nextY + r);
+
+  // Checks if a specific block is a wall or a inacessible area
+  function isWall(gX, gY) {
+    if (gY < 0 || gY >= lines || gX < 0 || gX >= columns) return true;
+    
+    const idBlock = wallMap[gY][gX];
+    return (idBlock <= 40 || idBlock === 44); 
+  }
+
+  // Check the four extremities of the Pac-Man body [HitBox]
+  if (isWall(left, top)) return false;      
+  if (isWall(right, top)) return false;    
+  if (isWall(left, bottom)) return false;  
+  if (isWall(right, bottom)) return false;  
+
+  return true; 
+}
+
+function update() {
+  // Try to turn in the desired direction
+  if (pacman.nextDirX !== 0 || pacman.nextDirY !== 0) {
+    
+    // Rule 1 -> U-turn always permited
+    if ((pacman.nextDirX === -pacman.dirX && pacman.dirX !== 0) || 
+        (pacman.nextDirY === -pacman.dirY && pacman.dirY !== 0)) {
+      pacman.dirX = pacman.nextDirX;
+      pacman.dirY = pacman.nextDirY;
+    } 
+    // Rule 2 -> 90 degree turns (only turn if you are in line with the corridor)
+    else {
+      // Find out how far Pac-Man is from the exact center of the block
+      const distCentroX = Math.abs((pacman.x % 1) - 0.5);
+      const distCentroY = Math.abs((pacman.y % 1) - 0.5);
+      const margemErro = pacman.speed; 
+
+      // Do you want to turn VERTICAL (you need to be aligned on the X axis to enter the corridor)
+      if (pacman.nextDirY !== 0 && distCentroX <= margemErro) {
+        const checkY = pacman.y + (pacman.nextDirY * pacman.speed);
+        if (canWalk(pacman.x, checkY)) {
+          pacman.x = Math.floor(pacman.x) + 0.5; // Align and attach it to the X rail
+          pacman.dirX = 0;
+          pacman.dirY = pacman.nextDirY;
+        }
+      }
+      // Do you want to turn HORIZONTAL (you need to be aligned on the Y axis to enter the corridor)
+      else if (pacman.nextDirX !== 0 && distCentroY <= margemErro) {
+        const checkX = pacman.x + (pacman.nextDirX * pacman.speed);
+        if (canWalk(checkX, pacman.y)) {
+          pacman.y = Math.floor(pacman.y) + 0.5; // Align and attach it to the Y rail
+          pacman.dirX = pacman.nextDirX;
+          pacman.dirY = 0;
+        }
+      }
+    }
+  }
+
+  // Execute the movement
+  const nextX = pacman.x + (pacman.dirX * pacman.speed);
+  const nextY = pacman.y + (pacman.dirY * pacman.speed);
+
+  if (canWalk(nextX, nextY)) {
+    pacman.x = nextX;
+    pacman.y = nextY;
+  } else {
+    // If he hits a wall head on, he stops walking completely
+    pacman.dirX = 0;
+    pacman.dirY = 0;
+  }
+
+  // Only move your mouth if it's actually moving
+  if (pacman.dirX !== 0 || pacman.dirY !== 0) {
+    
+    // Update pacman direction based on the angle (strangely, it is measured in radians)
+    if (pacman.dirX === 1) pacman.angle = 0;                           
+    else if (pacman.dirY === 1) pacman.angle = Math.PI / 2;            
+    else if (pacman.dirX === -1) pacman.angle = Math.PI;               
+    else if (pacman.dirY === -1) pacman.angle = -Math.PI / 2;
+
+    pacman.animDelay++;
+    
+    if (pacman.animDelay > 8) { // Animation speed is actually one image for each 8 frames of the game
+      pacman.frame++;
+      
+      if (pacman.frame > 2) { 
+        pacman.frame = 0; 
+      }
+      pacman.animDelay = 0;
+    }
+  } else {
+    // Personally I've decided to keep his mouth closed when he stops
+    pacman.frame = 0;
+  }
+}
+
+function gameLoop() {
+  if (gameState === "playing") {
+    update();
+    drawGame();
+
+    requestAnimationFrame(gameLoop);
+  }
+}
 
 function drawGame() {
   ctx.fillStyle = '#000000';
@@ -206,20 +321,34 @@ function drawPauseMenu() {
 }
 
 function drawPacman() {
-  const posX = offsetX + (pacman.x * blockSize);
-  const posY = offsetY + (pacman.y * blockSize);
+  const centerX = offsetX + (pacman.x * blockSize);
+  const centerY = offsetY + (pacman.y * blockSize);
 
   const snippetX = pacmanAnim[pacman.frame].x;
   const snippetY = pacmanAnim[pacman.frame].y;
+
+  const pacmanSize = blockSize * 2; 
+
+  // This part of the function is strange, but it needs to be done because
+  // actually, if I decided to move the pacman sprite in any direction, the entire
+  // page would rotate as well
+  ctx.save(); 
+  
+  ctx.translate(centerX, centerY); 
+  
+  ctx.rotate(pacman.angle); 
 
   ctx.drawImage(
     pacmanSprite,
     snippetX, snippetY,
     16, 16,             
-    posX, posY,
-    blockSize * 2, blockSize * 2
+    -pacmanSize / 2, -pacmanSize / 2, 
+    pacmanSize, pacmanSize
   );
+
+  ctx.restore(); 
 }
+
 // Start the game by drawing the menu first
 // Wait for the font to load before drawing the menu
 document.fonts.ready.then(function() {
@@ -232,7 +361,8 @@ window.addEventListener("keydown", function(event) {
   if (gameState === "menu") {
     if (event.key === "Enter") {
       gameState = "playing";
-      drawGame();
+      
+      gameLoop();
     }
   }
   // Playing Options
@@ -241,8 +371,19 @@ window.addEventListener("keydown", function(event) {
       gameState = "paused";
       drawPauseMenu();
     }
-    // TODO: Add motion controls for pacman here (WASD or Arrow Keys)
+    // Pacman Controllers [WASD or Arrow keys]
+    if (event.key === "w" || event.key === "ArrowUp") {
+      pacman.nextDirX = 0; pacman.nextDirY = -1;
+    } else if (event.key === "s" || event.key === "ArrowDown") {
+      pacman.nextDirX = 0; pacman.nextDirY = 1;
+    } else if (event.key === "a" || event.key === "ArrowLeft") {
+      pacman.nextDirX = -1; pacman.nextDirY = 0;
+    } else if (event.key === "d" || event.key === "ArrowRight") {
+      pacman.nextDirX = 1; pacman.nextDirY = 0;
+    }
+
   }
+
   // Pause Options
   else if (gameState === "paused") {
     if (event.key === "Escape") {
@@ -251,7 +392,7 @@ window.addEventListener("keydown", function(event) {
     }
     else if (event.key === "Enter") {
       gameState = "playing";
-      drawGame();
+      gameLoop();
     }
   }
   // Add more if needed
