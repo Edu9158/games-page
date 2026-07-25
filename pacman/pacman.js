@@ -3,9 +3,9 @@ document.getElementById("home-page-btn").addEventListener("click", function(){
   window.location.href = "../index.html"; // Redirect to index.html
 });
 
-// -----------------------------------------------------------
-// PACMAN GAME LOGIC
-// -----------------------------------------------------------
+// ----------------- \\
+// PACMAN GAME LOGIC \\
+// ----------------- \\
 
 const mapSprite = new Image();
 mapSprite.src = "../src/pacman/map-frames.png";
@@ -68,10 +68,12 @@ const atlasMap = {
 }
 
 // Important variables [Add more if needed]
-let is_alive = true;
+let isAlive = true;
 let score = 0;
 let lives = 3;
- 
+let tabletsCount = 0;
+let 
+
 // Get canvas context
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -136,7 +138,7 @@ const offsetY = (canvas.height - mapHeight) / 2; // Y offset to center the map
 const pacman = {
   x: 13.5,
   y: 23.5,
-  speed: 0.15, 
+  speed: 0.20, 
   dirX: 0,
   dirY: 0,
   nextDirX: 0,
@@ -165,19 +167,20 @@ function canWalk(nextX, nextY) {
 
   // Checks if a specific block is a wall or a inacessible area
   function isWall(gX, gY) {
-    if (gY < 0 || gY >= lines || gX < 0 || gX >= columns) return true;
+    if (gY < 0 || gY >= lines) return true; 
+    if (gX < 0 || gX >= columns) return false;
     
     const idBlock = wallMap[gY][gX];
     return (idBlock <= 40 || idBlock === 44); 
   }
 
   // Check the four extremities of the Pac-Man body [HitBox]
-  if (isWall(left, top)) return false;      
-  if (isWall(right, top)) return false;    
-  if (isWall(left, bottom)) return false;  
-  if (isWall(right, bottom)) return false;  
+  if (isWall(left, top)) return false;
+  if (isWall(right, top)) return false;
+  if (isWall(left, bottom)) return false;
+  if (isWall(right, bottom)) return false;
 
-  return true; 
+  return true;
 }
 
 function update() {
@@ -225,11 +228,20 @@ function update() {
   if (canWalk(nextX, nextY)) {
     pacman.x = nextX;
     pacman.y = nextY;
+    
+    if (pacman.x < -0.5) {
+      pacman.x = columns - 0.5
+    } else if (pacman.x > columns - 0.5) {
+      pacman.x = -0.5
+    }
   } else {
     // If he hits a wall head on, he stops walking completely
     pacman.dirX = 0;
     pacman.dirY = 0;
   }
+
+  // Collect points
+  verifyPointsCollision();
 
   // Only move your mouth if it's actually moving
   if (pacman.dirX !== 0 || pacman.dirY !== 0) {
@@ -242,7 +254,8 @@ function update() {
 
     pacman.animDelay++;
     
-    if (pacman.animDelay > 8) { // Animation speed is actually one image for each 8 frames of the game
+    // Animation speed is actually one image for each 8 frames of the game
+    if (pacman.animDelay > 8) { 
       pacman.frame++;
       
       if (pacman.frame > 2) { 
@@ -272,6 +285,10 @@ function drawGame() {
   for (let i=0; i < lines; i++) {
     for (let j = 0; j < columns; j++) {
       const idBlock = wallMap[i][j];
+      if (idBlock === 43 && !blinkStuff(250)) {
+        continue;
+      }
+
       if (atlasMap[idBlock] !== undefined) {
         const mapImage = atlasMap[idBlock].img;  
         
@@ -292,7 +309,8 @@ function drawGame() {
     }
   }
 
-  drawPacman()
+  displayScore();
+  drawPacman();
 }
 
 function drawMenu() {
@@ -349,6 +367,49 @@ function drawPacman() {
   ctx.restore(); 
 }
 
+function verifyPointsCollision() {
+  // Finding the curent position
+  let currentColumn = Math.floor(pacman.x);
+  let currentRow = Math.floor(pacman.y);
+
+  // Checks whats in the map in that position
+  let currentPosition = wallMap[currentRow][currentColumn];
+
+  if (currentPosition === 42) {
+    wallMap[currentRow][currentColumn] = 41;
+    score += 10;
+  } 
+  else if (currentPosition === 43) {
+    wallMap[currentRow][currentColumn] = 41;
+    score += 50;
+  } // Add more as needed
+
+}
+
+function displayScore() {
+  // Drawing scoreboard on top
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = '35px "Press Start 2P"';
+
+  ctx.fillText(score, 80, 45);
+}
+
+function blinkStuff(interval) {
+  // Returns 'true' for the first half of the time and 'false' for the second half
+  return Math.floor(Date.now() / interval) % 2 === 0;
+}
+
+function countTablets() {
+  // Scan and counts tablets once when game start
+  for (i=0; i < lines; i++) {
+    for (j=0; j < columns; j++) {
+      if (wallMap === 42 || wallMap === 43) {
+        tabletsCount++;
+      }
+    }
+  }
+}
+
 // Start the game by drawing the menu first
 // Wait for the font to load before drawing the menu
 document.fonts.ready.then(function() {
@@ -362,6 +423,7 @@ window.addEventListener("keydown", function(event) {
     if (event.key === "Enter") {
       gameState = "playing";
       
+
       gameLoop();
     }
   }
