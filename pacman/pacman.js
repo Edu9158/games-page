@@ -72,7 +72,7 @@ let isAlive = true;
 let score = 0;
 let lives = 3;
 let tabletsCount = 0;
-let 
+let countedYet = false; // Marks if tabletsCount was played or not
 
 // Get canvas context
 const canvas = document.getElementById("gameCanvas");
@@ -275,6 +275,8 @@ function gameLoop() {
     drawGame();
 
     requestAnimationFrame(gameLoop);
+  } else if (gameState === "win") {
+    drawYouWin();
   }
 }
 
@@ -375,14 +377,24 @@ function verifyPointsCollision() {
   // Checks whats in the map in that position
   let currentPosition = wallMap[currentRow][currentColumn];
 
-  if (currentPosition === 42) {
-    wallMap[currentRow][currentColumn] = 41;
-    score += 10;
-  } 
-  else if (currentPosition === 43) {
-    wallMap[currentRow][currentColumn] = 41;
-    score += 50;
-  } // Add more as needed
+  if (currentRow >= 0 && currentRow < lines && currentColumn >= 0 && currentColumn < columns) {
+    let currentPosition = wallMap[currentRow][currentColumn];
+
+    if (currentPosition === 42) {
+      wallMap[currentRow][currentColumn] = 41;
+      score += 10;
+      tabletsCount--;
+    } 
+    else if (currentPosition === 43) {
+      wallMap[currentRow][currentColumn] = 41;
+      score += 50;
+      tabletsCount--;
+    } // Add more as needed (Fruits) TODO
+  }
+
+  if (tabletsCount === 0) {
+    gameState = "win";
+  }
 
 }
 
@@ -401,13 +413,27 @@ function blinkStuff(interval) {
 
 function countTablets() {
   // Scan and counts tablets once when game start
-  for (i=0; i < lines; i++) {
-    for (j=0; j < columns; j++) {
-      if (wallMap === 42 || wallMap === 43) {
-        tabletsCount++;
+  if (!countedYet) {
+    for (i=0; i < lines; i++) {
+      for (j=0; j < columns; j++) {
+        if (wallMap[i][j] === 42 || wallMap[i][j] === 43) {
+          tabletsCount++;
+        }
       }
     }
-  }
+    countedYet = true;
+  } else return;
+}
+
+function drawYouWin() {
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height); 
+
+  ctx.fillStyle = '#FFFF00';
+  ctx.font = '48px "Press Start 2P"'
+  ctx.textAlign = 'center';
+
+  ctx.fillText('You Win', canvas.width / 2, canvas.height / 2)
 }
 
 // Start the game by drawing the menu first
@@ -423,10 +449,11 @@ window.addEventListener("keydown", function(event) {
     if (event.key === "Enter") {
       gameState = "playing";
       
-
+      countTablets();
       gameLoop();
     }
   }
+
   // Playing Options
   else if (gameState === "playing") {
     if (event.key === "Escape") {
@@ -443,7 +470,6 @@ window.addEventListener("keydown", function(event) {
     } else if (event.key === "d" || event.key === "ArrowRight") {
       pacman.nextDirX = 1; pacman.nextDirY = 0;
     }
-
   }
 
   // Pause Options
@@ -457,5 +483,13 @@ window.addEventListener("keydown", function(event) {
       gameLoop();
     }
   }
-  // Add more if needed
+
+  // Win game state
+  else if (gameState === "win") {
+    if (event.key === "Escape" || event.key === "Enter") {
+      gameState === "paused";
+      drawMenu();
+    }
+  } // Add more if needed
+
 });
