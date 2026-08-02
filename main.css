@@ -1,6 +1,6 @@
 .body {
-    background-image: url('src/indexBackground.jpg');
-    background-size: cover;
+    background-image: url('src/background.svg');
+    background-size: 1920px;
     background-position: center;
     min-height: 100vh;
     display: flex;
@@ -35,6 +35,12 @@
 .card-img-top {
     width: 260px;
     height: auto;
+}
+
+#logo-text {
+    width: 230px;
+    height: auto;
+    padding-bottom: 15px;
 }
 
 #pacman-btn,
