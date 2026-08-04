@@ -90,7 +90,7 @@ ctx.imageSmoothingEnabled = false;
 // 45 - Ghosts cage bars
 // 46 - Spawn/Fruits
 
-const wallMap = [
+const mainWallMap = [
   [ 2, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 40, 39, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,  1],
   [ 4, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 22, 21, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,  3],
   [ 4, 42, 20, 13, 13, 19, 42, 20, 13, 13, 13, 19, 42, 22, 21, 42, 20, 13, 13, 13, 19, 42, 20, 13, 13, 19, 42,  3],
@@ -123,6 +123,9 @@ const wallMap = [
   [ 4, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,  3],
   [ 6, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,  5],
 ];
+
+// Clone the mainWallMap to wallMap to avoid modifying the original map
+let wallMap = structuredClone(mainWallMap);
 
 const blockSize = 32; // Block size in pixels
 const lines = wallMap.length; // Number of rows
@@ -171,7 +174,11 @@ function canWalk(nextX, nextY) {
     if (gX < 0 || gX >= columns) return false;
     
     const idBlock = wallMap[gY][gX];
-    return (idBlock <= 40 || idBlock === 44); 
+    return (
+      idBlock <= 40 ||
+      idBlock === 44 || 
+      idBlock === 45
+    ); 
   }
 
   // Check the four extremities of the Pac-Man body [HitBox]
@@ -273,11 +280,11 @@ function gameLoop() {
   if (gameState === "playing") {
     update();
     drawGame();
-
-    requestAnimationFrame(gameLoop);
   } else if (gameState === "win") {
     drawYouWin();
   }
+
+  requestAnimationFrame(gameLoop);
 }
 
 function drawGame() {
@@ -374,10 +381,13 @@ function verifyPointsCollision() {
   let currentColumn = Math.floor(pacman.x);
   let currentRow = Math.floor(pacman.y);
 
-  // Checks whats in the map in that position
-  let currentPosition = wallMap[currentRow][currentColumn];
-
-  if (currentRow >= 0 && currentRow < lines && currentColumn >= 0 && currentColumn < columns) {
+  if (
+    currentRow >= 0 &&
+    currentRow < lines &&
+    currentColumn >= 0 &&
+    currentColumn < columns
+  ) {
+    // Checks whats in the map in that position
     let currentPosition = wallMap[currentRow][currentColumn];
 
     if (currentPosition === 42) {
@@ -392,7 +402,7 @@ function verifyPointsCollision() {
     } // Add more as needed (Fruits) TODO
   }
 
-  if (tabletsCount === 0) {
+  if (tabletsCount <= 0) {
     gameState = "win";
   }
 
@@ -414,8 +424,8 @@ function blinkStuff(interval) {
 function countTablets() {
   // Scan and counts tablets once when game start
   if (!countedYet) {
-    for (i=0; i < lines; i++) {
-      for (j=0; j < columns; j++) {
+    for (let i=0; i < lines; i++) {
+      for (let j=0; j < columns; j++) {
         if (wallMap[i][j] === 42 || wallMap[i][j] === 43) {
           tabletsCount++;
         }
@@ -426,20 +436,55 @@ function countTablets() {
 }
 
 function drawYouWin() {
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-  ctx.fillRect(0, 0, canvas.width, canvas.height); 
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; // Transparent Overlay
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   ctx.fillStyle = '#FFFF00';
   ctx.font = '48px "Press Start 2P"'
   ctx.textAlign = 'center';
 
-  ctx.fillText('You Win', canvas.width / 2, canvas.height / 2)
+  ctx.fillText(
+    'You Win',
+    canvas.width / 2,
+    canvas.height / 2
+  )
+
+
+  ctx.font = '24px "Press Start 2P"'
+  ctx.fillText(
+    'Press Enter to Quit',
+    canvas.width / 2,
+    canvas.height / 2 + 50
+  )
+}
+
+function resetGame() {
+  wallMap = structuredClone(mainWallMap);
+
+  score = 0;
+  lives = 3;
+  tabletsCount = 0;
+  countedYet = false;
+
+  pacman.x = 13.5;
+  pacman.y = 23.5;
+  pacman.dirX = 0;
+  pacman.dirY = 0;
+  pacman.nextDirX = 0;
+  pacman.nextDirY = 0;
+
+  pacman.frame = 0;
+  pacman.animDelay = 0;
+  pacman.angle = 0;
+
+  countTablets();
 }
 
 // Start the game by drawing the menu first
 // Wait for the font to load before drawing the menu
 document.fonts.ready.then(function() {
   drawMenu();
+  gameLoop();
 });
 
 // Listen for keydown events to start/pause/resume the game
@@ -450,7 +495,6 @@ window.addEventListener("keydown", function(event) {
       gameState = "playing";
       
       countTablets();
-      gameLoop();
     }
   }
 
@@ -470,24 +514,30 @@ window.addEventListener("keydown", function(event) {
     } else if (event.key === "d" || event.key === "ArrowRight") {
       pacman.nextDirX = 1; pacman.nextDirY = 0;
     }
+
+    //  TODO: Remember to remove this later, it is just for testing purposes
+    if (event.key === "Shift") {
+      tabletsCount = 0;
+    }
   }
 
   // Pause Options
   else if (gameState === "paused") {
     if (event.key === "Escape") {
+      resetGame();
       gameState = "menu";
       drawMenu();
     }
     else if (event.key === "Enter") {
       gameState = "playing";
-      gameLoop();
     }
   }
 
   // Win game state
   else if (gameState === "win") {
     if (event.key === "Escape" || event.key === "Enter") {
-      gameState === "paused";
+      resetGame();
+      gameState = "menu";
       drawMenu();
     }
   } // Add more if needed

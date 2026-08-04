@@ -14,14 +14,14 @@
 }
 
 .card {
-    background-color: #d6eed5;
+    background-color: #e3d5c5fd;
     height: 750px;
     width: 500px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    border: 3px solid #124717;
+    border: 3px solid #000000;
     border-radius: 15px;
     box-shadow: 12px 12px 9px rgba(0, 0, 0, 0.2);
 }
