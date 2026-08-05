@@ -226,6 +226,8 @@ function update() {
         }
       }
     }
+
+    updateGhosts();
   }
 
   // Execute the movement
@@ -319,6 +321,7 @@ function drawGame() {
   }
 
   displayScore();
+  drawGhost();
   drawPacman();
 }
 
